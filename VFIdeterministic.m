@@ -1,3 +1,4 @@
+clear all
 close all
 %%%% Set up parameters
 alpha = 0.35;
