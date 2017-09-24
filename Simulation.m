@@ -1,3 +1,4 @@
+%%%%%%%%%%%%%%%%NEW SIMULTION%%%%%%%%%%
 clear all
 clc
 close all
@@ -8,7 +9,10 @@ delta = 0.025;
 sigma = 2;
 pi_hh=0.977; pi_hl=1-pi_hh; pi_ll=0.926; pi_lh=1-pi_ll;
 pi=[pi_hh, pi_hl; pi_lh, pi_ll]; %% pi matrix
-A_h=1.1; A_l=0.678;
+%%Try different value of A
+pi_long=pi^1000; %long run pi matrix 
+A_h=1.002; %try differen A_h if sd(y) is higher than 1.08% then lower A_h
+A_l=(1-pi_long(1,1)*A_h)/pi_long(1,2);
 A=[A_h;A_l];
 
 %%%% Set up discretized state space
@@ -36,8 +40,6 @@ ret_l(cons_l < 0) = -Inf;
 %%%% Iteration
 dis = 1; tol = 1e-06; % tolerance for stopping 
 v_guess = zeros(2, num_k); %Firsr row is V_h, Second row is V_l.
-%Timer
-t0=tic;
 while dis > tol
     % compute the utility value for all possible combinations of k and k':
     value_mat_h = ret_h + beta *(pi(1,1)* repmat(v_guess(1,:), [num_k 1])+pi(1,2)* repmat(v_guess(2,:), [num_k 1]));
@@ -55,48 +57,47 @@ while dis > tol
     % if distance is larger than tolerance, update current guess and
     % continue, otherwise exit the loop
     v_guess = [vfn_h;vfn_l];
-end; t=toc(t0);
+end; 
 
 % policy function
 g_h = k(pol_indx_h); %High A
 g_l = k(pol_indx_l); %Low A
 
-%Saving
-s_h=g_h-(1-delta)*k; %High A
-s_l=g_l-(1-delta)*k; %Low A
+%%%%%%%Simulation%%%%%%%%
+%To find steady state
+g=[g_h;g_l];
+%Simulate A sequence and k sequence
+rng(1234);
+prob=rand(1,5000);
+A_sim=zeros(1,5000+1);
+A_sim(1)=A_h; % initial state of A, A_0 in simulation
+K=zeros(1,5000+1);
+K(1)=30;  %intial k,k_0 in simulation
 
-%%%%%Plot Value function over k
-figure (1)
-suptitle('Value Function')
-plot(k,vfn_h);
-hold on;
-plot(k,vfn_l);
-hold off;
-legend('for A^h','for A^l','location','northwest');
-xlabel('k');
-ylabel('V(k)');
+for i=2:5000+1
+    [c,indx]=min(abs(K(i-1)-k));
+    if A_sim(i-1)==A_h
+        if prob(i-1)<pi_hh
+            A_sim(i)=A_l;
+            K(i)=g_l(indx);
+        else A_sim(i)=A_h; K(i)=g_h(indx);
+        end
+    else
+        if prob(i-1)<pi_ll
+            A_sim(i)=A_h;
+            K(i)=g_h(indx);
+        else A_sim(i)=A_l;K(i)=g_l(indx);
+        end
+    end
+end
 
-%%%%%Plot Policy Function over k
-figure (2)
-plot(k,g_h);
-hold on;
-plot(k,g_l);
-hold off;
-legend('for A^h','for A^l','location','northwest')
-suptitle('Policy Function')
-xlabel('k');
-ylabel('g(k)');
+Y=A_sim.*K.^alpha;
+SD_Y=std(Y)
 
-%%%%%Plot Saving Function over k
-figure (3)
-plot(k,s_h);
-hold on;
-plot(k,s_l);
-hold off;
-legend('for A^h','for A^l','location','northwest');
-suptitle('Saving over k')
-xlabel('k');
+figure (4)
+plot(Y);
+suptitle('Simulation of GDP with sd(Y)=0.0175')
+xlabel('t');
 ylabel('Saving');
 
-  
-   
+
