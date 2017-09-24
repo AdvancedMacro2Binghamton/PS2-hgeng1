@@ -1,6 +1,8 @@
 clear all
 clc
 close all
+%Timer
+t0=tic;
 %%%% Set up parameters
 alpha = 0.35;
 beta = 0.99;
@@ -36,8 +38,7 @@ ret_l(cons_l < 0) = -Inf;
 %%%% Iteration
 dis = 1; tol = 1e-06; % tolerance for stopping 
 v_guess = zeros(2, num_k); %Firsr row is V_h, Second row is V_l.
-%Timer
-t0=tic;
+
 while dis > tol
     % compute the utility value for all possible combinations of k and k':
     value_mat_h = ret_h + beta *(pi(1,1)* repmat(v_guess(1,:), [num_k 1])+pi(1,2)* repmat(v_guess(2,:), [num_k 1]));
@@ -55,7 +56,8 @@ while dis > tol
     % if distance is larger than tolerance, update current guess and
     % continue, otherwise exit the loop
     v_guess = [vfn_h;vfn_l];
-end; t=toc(t0);
+end; 
+t=toc(t0); %timer end 
 
 % policy function
 g_h = k(pol_indx_h); %High A
@@ -97,6 +99,8 @@ legend('for A^h','for A^l','location','northwest');
 suptitle('Saving over k')
 xlabel('k');
 ylabel('Saving');
+
+
 
   
    
