@@ -1,3 +1,4 @@
+clear all
 close all
 %%%% Set up parameters
 alpha = 0.35;
@@ -31,7 +32,7 @@ while dis > tol
     value_mat = ret + beta * repmat(v_guess, [num_k 1]);
     
     % find the optimal k' for every k:
-    [vfn, pol_indx] = max(value_mat, [], 2);
+    [vfn, pol_indx] = max(value_mat, [], 2); 
     vfn = vfn';
     
     % what is the distance between current guess and value function
